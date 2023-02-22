@@ -1,0 +1,3 @@
+/Users/jacob/IdeaProjects/CLion/Engine/cmake-build-debug/CMakeFiles/Engine.dir
+/Users/jacob/IdeaProjects/CLion/Engine/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/jacob/IdeaProjects/CLion/Engine/cmake-build-debug/CMakeFiles/rebuild_cache.dir
