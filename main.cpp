@@ -1,7 +1,10 @@
-#include <iostream>
+#include "JString.h"
 
-int main() {
-    std::cout << 'n' << std::endl;
 
-    return 0;
+int main()
+{
+	JSTL::JString MyName = "Jacob Lim";
+
+	std::cout << MyName;
+	return 0;
 }
