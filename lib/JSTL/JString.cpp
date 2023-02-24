@@ -2,40 +2,58 @@
 // Created by Jacob Lim on 2023/02/23.
 //
 
-#include "JSTL/JString.h"
+#include "JString.h"
 
 namespace JSTL
 {
-	JString::JString(c_pointer char_type) : mString(), mLength(strLen(char_type))
+#pragma region CONSTRUCTOR
+	JString::JString() : mString(), mLength(0), mCapacity(22) { Reserve(mCapacity); }
+	JString::JString(c_pointer char_type) : mString(), mLength(strLen(char_type)), mCapacity(22)
 	{
-		mString = new char[mLength + 1];
+		if (mLength > mCapacity)
+			mCapacity = mLength * 2;
 
-		int i = 0;
-		while (char_type[i] != '\0')
+		Reserve(mCapacity);
+
+		for (int i = 0; i < mLength; ++i)
 		{
-			mString[i] = char_type[i];
-			i++;
+			if (char_type[i] >= 0x20)
+				mString[i] = char_type[i];
 		}
-		mString[i] = '\0';
+		mString[mLength] = '\0';
 	}
-	JString::JString(const JSTL::JString &other) : JString(other.GetCString()) {}
+	JString::JString(const JSTL::JString &other) : JString(other.mString) {}
+#pragma endregion CONSTRUCTOR
 
+#pragma region INTERNALFUNCTION
+	void JString::Reserve(size_t size)
+	{
+		if (mString == nullptr)
+		{
+			size_t optimized = size > mCapacity ? size : mCapacity;
+			mString = (char *)malloc(optimized + 1);
+			mCapacity = optimized;
+			return;
+		}
+		if (mCapacity >= size)
+			return;
+		mCapacity = size;
+		mString = (char *)realloc(mString, mCapacity + 1);
+	}
 	void JString::Append(const char *char_type)
 	{
-		const unsigned newLen = strLen(char_type) + mLength;
-		char *newString = new char[newLen + 1];
-		for (auto i = 0; i < mLength; ++i)
-		{
-			newString[i] = mString[i];
-		}
+		const size_t addLen = strLen(char_type);
+		const size_t newLen = addLen + mLength;
+
+		Reserve(newLen > mCapacity ? newLen * 2 : newLen);
+
 		for (auto i = mLength; i < newLen; ++i)
 		{
-			newString[i] = char_type[i - mLength];
+			if (char_type[i - mLength] >= 0x20)
+				mString[i] = char_type[i - mLength];
 		}
-		newString[newLen] = '\0';
-		delete[] mString;
-		mString = newString;
 		mLength = newLen;
+		mString[mLength] = '\0';
 	}
 	bool JString::Insert(unsigned index, c_pointer char_type)
 	{
@@ -43,142 +61,150 @@ namespace JSTL
 			return false;
 		const unsigned addLen = strLen(char_type);
 		const unsigned newLen = mLength + addLen;
-		char *newString = new char[newLen + 1];
 
-		for (int i = 0; i < index; ++i)
+		if (mCapacity >= newLen)
 		{
-			newString[i] = mString[i];
+			for (size_t i = mLength; i >= mLength - addLen; --i)
+			{
+				mString[i + addLen] = mString[i];
+			}
+			for (size_t i = index; i < mLength; ++i)
+			{
+				const char cachedChar = mString[i];
+				mString[i] = char_type[i - index];
+				mString[i + addLen] = cachedChar;
+			}
 		}
-		for (int i = index; i < index + addLen; ++i)
+		else
 		{
-			newString[i] = char_type[i - index];
-		}
-		for (int i = index + addLen; i < newLen; ++i)
-		{
-			newString[i] = mString[i - addLen];
+			mCapacity = newLen * 2;
+			char *newString = (char *)malloc(mCapacity);
+			for (size_t i = 0; i < index; ++i)
+			{
+				newString[i] = mString[i];
+			}
+			for (size_t i = index; i < index + addLen; ++i)
+			{
+				newString[i] = char_type[i - index];
+			}
+			for (size_t i = index + addLen; i < newLen; ++i)
+			{
+				newString[i] = mString[i - addLen];
+			}
+			delete[] mString;
+			mString = newString;
 		}
 
-		newString[newLen] = '\0';
-
-		delete[] mString;
-		mString = newString;
+		mString[newLen] = '\0';
 		mLength = newLen;
 
 		return true;
 	}
-	int JString::IndexOf(c_pointer char_type)
+	size_t JString::IndexOf(c_pointer char_type)
 	{
 		for (int i = 0; i < mLength; ++i)
 		{
 			if (mString[i] == char_type[0])
 			{
 				const char *startIndexString = mString + i;
-				if (*startIndexString == *char_type)
+				if (JString{startIndexString} == JString{char_type})
 					return i;
 			}
 		}
-		return -1;
+		return NPOS;
 	}
-	int JString::LastIndexOf(c_pointer char_type)
+	size_t JString::LastIndexOf(c_pointer char_type)
 	{
 		for (int i = mLength - 1; i >= 0; i--)
 		{
 			if (mString[i] == char_type[0])
 			{
 				const char *startIndexString = mString + i;
-				if (*startIndexString == *char_type)
+				if (JString{startIndexString} == JString{char_type})
 					return i;
 			}
 		}
-		return -1;
+		return NPOS;
 	}
 	bool JString::RemoveAt(unsigned index)
 	{
 		if (index >= mLength)
 			return false;
+
 		mLength--;
-		char *newString = new char[mLength];
-		for (int i = 0; i < index; ++i)
+		for (size_t i = index; i < mLength; ++i)
 		{
-			newString[i] = mString[i];
+			mString[i] = mString[i + 1];
 		}
-		for (unsigned i = index; i < mLength; ++i)
-		{
-			newString[i] = mString[i + 1];
-		}
-		delete[] mString;
-		mString = newString;
 		return true;
 	}
-	void JString::PadLeft(int totalLen)
+	void JString::PadLeft(size_t totalLen)
 	{
 		if (totalLen <= mLength)
 			return;
 		const unsigned paddingLen = totalLen - mLength;
-		const unsigned newLen = totalLen;
-		char *newString = new char[totalLen + 1];
 
-		for (int i = 0; i < newLen; ++i)
+		Reserve(totalLen > mCapacity ? totalLen * 2 : mCapacity);
+
+		for (int i = mLength; i >= 0; --i)
 		{
-			newString[i] = i < paddingLen ? ' ' : mString[i - paddingLen];
+			mString[i + paddingLen] = mString[i];
 		}
 
-		newString[newLen] = '\0';
-		delete[] mString;
-		mString = newString;
-		mLength = newLen;
+		for (int i = 0; i < paddingLen; ++i)
+		{
+			mString[i] = ' ';
+		}
+		mLength = totalLen;
 	}
-	void JString::PadLeft(int totalLen, const char c)
+	void JString::PadLeft(size_t totalLen, char c)
 	{
 		if (totalLen <= mLength)
 			return;
 		const unsigned paddingLen = totalLen - mLength;
-		const unsigned newLen = totalLen;
-		char *newString = new char[totalLen + 1];
 
-		for (int i = 0; i < newLen; ++i)
+		Reserve(totalLen > mCapacity ? totalLen * 2 : mCapacity);
+
+		for (int i = mLength; i >= 0; --i)
 		{
-			newString[i] = i < paddingLen ? c : mString[i - paddingLen];
+			mString[i + paddingLen] = mString[i];
 		}
 
-		newString[newLen] = '\0';
-		delete[] mString;
-		mString = newString;
-		mLength = newLen;
+		for (int i = 0; i < paddingLen; ++i)
+		{
+			mString[i] = c;
+		}
+		mLength = totalLen;
 	}
-	void JString::PadRight(int totalLen)
+	void JString::PadRight(size_t totalLen)
 	{
 		if (totalLen <= mLength)
 			return;
-		const unsigned newLen = totalLen;
-		char *newString = new char[totalLen + 1];
 
-		for (int i = 0; i < newLen; ++i)
+		Reserve(totalLen > mCapacity ? totalLen * 2 : mCapacity);
+
+		for (size_t i = mLength; i < totalLen; ++i)
 		{
-			newString[i] = i < mLength ? mString[i] : ' ';
+			mString[i] = ' ';
 		}
+		mString[totalLen] = '\0';
 
-		newString[newLen] = '\0';
-		delete[] mString;
-		mString = newString;
-		mLength = newLen;
+		mLength = totalLen;
 	}
-	void JString::PadRight(int totalLen, const char c)
+	void JString::PadRight(size_t totalLen, char c)
 	{
 		if (totalLen <= mLength)
 			return;
-		const unsigned newLen = totalLen;
-		char *newString = new char[totalLen + 1];
 
-		for (int i = 0; i < newLen; ++i)
+		Reserve(totalLen > mCapacity ? totalLen * 2 : mCapacity);
+
+		for (size_t i = mLength; i < totalLen; ++i)
 		{
-			newString[i] = i < mLength ? mString[i] : c;
+			mString[i] = c;
 		}
+		mString[totalLen] = '\0';
 
-		newString[newLen] = '\0';
-		delete[] mString;
-		mString = newString;
-		mLength = newLen;
+		mLength = totalLen;
 	}
 	void JString::Reverse()
 	{
@@ -210,11 +236,13 @@ namespace JSTL
 				mString[i] -= 32;
 		}
 	}
+#pragma endregion INTERNALFUNCTION
 
+#pragma region OPERATOR
 	JString JString::operator+(const JString &rhs) const
 	{
 		unsigned newLen = rhs.mLength + mLength;
-		char *newString = new char[newLen + 1];
+		char *newString = (char *)malloc(newLen * 2);
 		for (unsigned i = 0; i < newLen; ++i)
 		{
 			newString[i] = i < mLength ? mString[i] : rhs.mString[i - mLength];
@@ -241,13 +269,14 @@ namespace JSTL
 	{
 		if (&rhs == this)
 			return *this;
-		delete[] mString;
 
+		mCapacity = rhs.mCapacity;
 		mLength = rhs.mLength;
-		mString = new char[mLength + 1];
+		Reserve(mCapacity);
 		for (int i = 0; i < mLength; ++i)
 		{
-			mString[i] = rhs.mString[i];
+			if (rhs.mString[i] >= 0x20)
+				mString[i] = rhs.mString[i];
 		}
 		mString[mLength] = '\0';
 
@@ -267,10 +296,13 @@ namespace JSTL
 	std::istream &operator>>(std::istream &is, JString &rhs)
 	{
 		is >> rhs.mString;
+		rhs.mLength = rhs.strLen(rhs.mString);
+		rhs.mCapacity = rhs.mLength * 2;
 		return is;
 	}
+#pragma endregion OPERATOR
 
-	unsigned JString::strLen(c_pointer char_type)
+	size_t JString::strLen(c_pointer char_type)
 	{
 		unsigned len = 0;
 		while (char_type[len] != '\0')
