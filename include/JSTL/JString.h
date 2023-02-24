@@ -10,6 +10,7 @@ namespace JSTL
 {
 	typedef const char* c_pointer;
 
+	//TODO: custom allocator로 바꾸기
 	class JString final
 	{
 	private:

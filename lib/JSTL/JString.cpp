@@ -2,7 +2,7 @@
 // Created by Jacob Lim on 2023/02/23.
 //
 
-#include "JString.h"
+#include "JSTL/JString.h"
 
 namespace JSTL
 {

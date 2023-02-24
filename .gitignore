@@ -14,32 +14,13 @@ build.bat
 .p4config
 
 ## CMake generated files
+cmake-build/
+cmake-build-debug/
 CMakeCache.txt
 cmake_install.cmake
 
 ## Patch files
 *.patch
-
-## For Visual Studio Generated projects
-*.sln
-**/*.vcxproj
-**/*.vcxproj.filters
-*.VC.opendb
-*.sdf
-**/*.suo
-**/*.user
-.vs/*
-**/Debug/*
-CMakeFiles/*
-EASTL.dir/**
-RelWithDebInfo/*
-Release/*
-Win32/*
-x64/*
-MinSizeRel/*
-build*/*
-Testing/*
-%ALLUSERSPROFILE%/*
 
 # Buck
 /buck-out/

@@ -1,6 +1,0 @@
-/Users/jacob/IdeaProjects/CLion/Engine/cmake-build-debug/CMakeFiles/Engine.dir
-/Users/jacob/IdeaProjects/CLion/Engine/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/jacob/IdeaProjects/CLion/Engine/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/Users/jacob/IdeaProjects/CLion/Engine/cmake-build-debug/lib/JSTL/CMakeFiles/JSTL.dir
-/Users/jacob/IdeaProjects/CLion/Engine/cmake-build-debug/lib/JSTL/CMakeFiles/edit_cache.dir
-/Users/jacob/IdeaProjects/CLion/Engine/cmake-build-debug/lib/JSTL/CMakeFiles/rebuild_cache.dir
