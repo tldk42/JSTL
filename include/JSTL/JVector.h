@@ -190,29 +190,93 @@ namespace JSTL
 		UnCheckedAppend(val);
 	}
 
-	// TODO : 구현
 	template <typename T>
 	typename Vector<T>::Iterator Vector<T>::Erase(Vector::Iterator start, Vector::Iterator end)
 	{
-		return nullptr;
+		if (start > end)
+			throw std::invalid_argument{"vector::erase"};
+		if (start < mData || mDataEnd < end)
+			throw std::invalid_argument{"vector::erase"};
+		for (Iterator i = start; i < mDataEnd - 1; ++i)
+			*i = *(i + (end - start));
+		mDataEnd -= (end - start);
+		return end;
 	}
-	// TODO : 구현
 	template <typename T>
 	typename Vector<T>::Iterator Vector<T>::Erase(Vector::Iterator pos)
 	{
-		return nullptr;
+		if (pos < mData || pos > mDataEnd)
+			throw std::invalid_argument{"vector::erase"};
+		for (Iterator i = pos; i < mDataEnd - 1; ++i)
+			*i = *(i + 1);
+		mDataEnd--;
+		return pos;
 	}
-	// TODO : 구현
 	template <typename T>
 	typename Vector<T>::Iterator Vector<T>::Insert(Vector::ConstIterator pos, int count, ReferenceType value)
 	{
-		return nullptr;
+		if (pos < mData || pos >= mDataEnd)
+			throw std::out_of_range{"vector::insert(index 범위 벗어남)"};
+
+		mDataEnd += count;
+
+		int posInteger = 0;
+		for (Iterator i = mData; i < pos; ++i)
+		{
+			posInteger++;
+		}
+
+		SizeType newSize = GetSize() + count;
+		Iterator newData = mAlloc.allocate(newSize);
+		Iterator newDataEnd = std::uninitialized_copy(mData, mDataEnd + 1, newData);
+
+		for (int i = 0; i < posInteger; ++i)
+			newData[i] = mData[i];
+
+		for (int i = posInteger; i <= posInteger + count; ++i)
+			newData[i] = value;
+
+		int afterInserted = posInteger + count;
+		int newLast = GetSize() + count;
+		for (int i = afterInserted; i < newLast; ++i)
+			newData[i] = mData[i - count];
+		Destroy_();
+		mData = newData;
+		mDataEnd = newDataEnd;
+		mReservedStart = mData + newSize;
+
+		return mData + posInteger;
 	}
-	// TODO : 구현
 	template <typename T>
 	typename Vector<T>::Iterator Vector<T>::Insert(Vector::ConstIterator pos, ConstReferenceType value)
 	{
-		return nullptr;
+		if (pos < mData || pos >= mDataEnd)
+			throw std::out_of_range{"vector::insert(index 범위 벗어남)"};
+		// From Here need to resize current vector
+		int posInteger = 0;
+		for (Iterator i = mData; i < pos; ++i)
+		{
+			posInteger++;
+		}
+		SizeType newSize = GetSize() + 1;
+		Iterator newData = mAlloc.allocate(newSize);
+		Iterator newDataEnd = std::uninitialized_copy(mData, mDataEnd + 1, newData);
+
+		newData[posInteger] = value;
+		int afterPos = posInteger + 1;
+		int newLast = GetSize() + 1;
+
+		for (int i = afterPos; i < newLast; ++i)
+		{
+			newData[i] = mData[i - 1];
+		}
+
+		Destroy_();
+		mData = newData;
+		mDataEnd = newDataEnd;
+		mReservedStart = mData + newSize;
+
+		return mData + posInteger;
 	}
 
 	template <typename T>
@@ -262,7 +326,7 @@ namespace JSTL
 	template <typename T>
 	void Vector<T>::Reserve_()
 	{
-		SizeType newSize = std::max(ptrdiff_t (mReservedStart - mData) * 2, ptrdiff_t(5));
+		SizeType newSize = std::max(ptrdiff_t(mReservedStart - mData) * 2, ptrdiff_t(5));
 		Reserve(newSize);
 	}
 	template <typename T>
@@ -343,10 +407,6 @@ namespace JSTL
 	}
 
 
-
-
-
-
 	template <typename T>
 	bool Vector<T>::operator==(const Vector<T>& other) const
 	{
@@ -375,7 +435,8 @@ namespace JSTL
 			if (at(i) != other.at(i))
 				return at(i) < other.at(i);
 		}
-		return GetSize() < other.GetSize();	}
+		return GetSize() < other.GetSize();
+	}
 	template <typename T>
 	bool Vector<T>::operator>(const Vector<T>& other) const
 	{
@@ -605,5 +666,5 @@ namespace JSTL
 #endif
 
 
-}
+} // namespace JSTL
 #endif // ENGINE_JVECTOR_H
